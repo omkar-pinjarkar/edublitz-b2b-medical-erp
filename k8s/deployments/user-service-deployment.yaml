@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/part-of: med-erp
     version: "1.0.0"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: user-service
@@ -32,7 +32,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: user-service
-          image: 898220629393.dkr.ecr.ap-southeast-2.amazonaws.com/user-app:latest
+          image: 254201323767.dkr.ecr.ap-northeast-1.amazonaws.com/medical-erp-user:1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8081

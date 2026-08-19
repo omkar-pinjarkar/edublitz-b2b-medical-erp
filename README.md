@@ -164,3 +164,172 @@ GitHub → Jenkins → npm ci → Lint → Vite Build → S3 → CloudFront Inva
 
 Proprietary — **Edublitz — Powered by Greamio Technologies Pvt Ltd.**  
 See [LICENSE](LICENSE). All rights reserved.
+## DevOps Implementation
+
+The application was deployed as a production-style AWS development environment using containerized microservices, Kubernetes, Terraform, and Jenkins.
+
+### AWS Infrastructure
+
+The infrastructure was provisioned using modular Terraform and included:
+
+- Amazon VPC
+- Public and private subnets
+- NAT Gateways
+- Route tables
+- Security groups
+- IAM roles and OIDC integration
+- Amazon EKS cluster
+- EKS managed node group
+- AWS Load Balancer Controller
+
+### Containerization
+
+The three Spring Boot services were containerized using Docker:
+
+- `user-service`
+- `product-service`
+- `order-service`
+
+Docker images were pushed to Amazon ECR and deployed to Amazon EKS.
+
+```text
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ▼
+Docker Build
+   │
+   ▼
+Amazon ECR
+   │
+   ▼
+Amazon EKS
+
+Kubernetes Deployment
+
+The services were deployed into the med-erp namespace.
+
+kubectl get pods -n med-erp
+kubectl get services -n med-erp
+kubectl get ingress -n med-erp
+
+The services used Kubernetes ClusterIP Services for internal communication, while the AWS Load Balancer Controller exposed the APIs through an Application Load Balancer.
+
+CI/CD
+
+Jenkins was used to automate the application delivery process.
+
+Backend Pipeline
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ▼
+Maven Build
+   │
+   ▼
+Docker Build
+   │
+   ▼
+Amazon ECR
+   │
+   ▼
+Amazon EKS
+   │
+   ▼
+Deployment Verification
+Frontend Pipeline
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ▼
+npm ci
+   │
+   ▼
+Lint
+   │
+   ▼
+Vite Build
+   │
+   ▼
+Amazon S3
+   │
+   ▼
+CloudFront
+
+Jenkins pipeline definitions are available in:
+
+jenkins/
+├── Jenkinsfile.backend
+├── Jenkinsfile.frontend
+└── Jenkinsfile.infra
+Frontend Deployment
+
+The React/Vite frontend was deployed using:
+
+React/Vite
+    │
+    ▼
+Jenkins
+    │
+    ▼
+Amazon S3
+    │
+    ▼
+CloudFront CDN
+
+CloudFront served the static frontend while API requests were routed toward the Kubernetes Application Load Balancer.
+
+Database
+
+MongoDB Atlas was used as the managed database layer for the microservices.
+
+Each service maintains its own database boundary:
+
+user-service     → users database
+product-service  → products database
+order-service    → orders database
+Application Security
+JWT-based authentication
+Role-based authorization
+Authenticated service-to-service communication
+Kubernetes Secrets for sensitive configuration
+Environment files excluded from version control
+No production credentials committed to Git
+Deployment Verification
+
+The deployed environment was verified using Kubernetes and AWS CLI commands.
+
+Examples:
+
+kubectl get pods -n med-erp
+kubectl get services -n med-erp
+kubectl get ingress -n med-erp
+aws eks list-clusters --region ap-northeast-1
+aws ecr describe-repositories --region ap-northeast-1
+
+Spring Boot Actuator health endpoints were also used to verify service health.
+
+Deployment Evidence
+
+The project includes deployment evidence covering:
+
+Terraform infrastructure
+Amazon EKS
+Kubernetes workloads
+Kubernetes Services
+AWS Application Load Balancer
+Amazon ECR
+Jenkins CI/CD
+Amazon S3
+CloudFront
+Application health checks
+
+The AWS environment was created as a temporary development/demo deployment and was removed after verification to avoid unnecessary cloud costs.
+
+Note: No AWS credentials, MongoDB connection strings, JWT secrets, or other sensitive configuration should be committed to this repository.

@@ -516,12 +516,33 @@ The evidence covers:
 - CloudFront
 - Application/API verification
 
-<!-- Add your screenshots below, e.g.: -->
-<!-- ![GitHub Repository](docs/images/github-repo.png) -->
-<!-- ![Jenkins Backend Console Log](docs/images/jenkins-backend.png) -->
-<!-- ![Jenkins Frontend Console Log](docs/images/jenkins-frontend.png) -->
-<!-- ![EKS Cluster](docs/images/eks-cluster.png) -->
-<!-- ![CloudFront API Verification](docs/images/cloudfront-verification.png) -->
+### GitHub Repository
+
+![GitHub Repository](docs/screenshots/01-GitHub-Repository.png)
+
+### Jenkins Backend Pipeline
+
+![Jenkins Backend Success](docs/screenshots/02-Jenkins-Backend-Success.png)
+
+Backend Jenkins console log: [Jenkins-Backend-Console-Log.txt](docs/screenshots/Jenkins-Backend-Console-Log.txt)
+
+### Jenkins Frontend Pipeline
+
+![Jenkins Frontend Success](docs/screenshots/03-Jenkins-Frontend-Success.png)
+
+Frontend Jenkins console log: [Jenkins-Frontend-Console-Log.txt](docs/screenshots/Jenkins-Frontend-Console-Log.txt)
+
+### Kubernetes Deployment
+
+![EKS Kubernetes](docs/screenshots/04-EKS-Kubernetes.png)
+
+### EKS Cluster
+
+![EKS Cluster](docs/screenshots/06-EKS-Cluster.png)
+
+### CloudFront API Verification
+
+![CloudFront API Verification](docs/screenshots/05-CloudFront-API-Verification.png)
 
 These screenshots and console logs provide evidence of the CI/CD pipelines, Kubernetes deployment, EKS infrastructure, and application/API verification performed during the AWS deployment.
 

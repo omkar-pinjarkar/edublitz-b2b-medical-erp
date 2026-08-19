@@ -1,86 +1,205 @@
-// Backend — build, test; on main: Docker Hub/ECR login, push to ECR, deploy to EKS.
-//
-// In Jenkins: Manage Credentials → add these IDs exactly:
-//   aws-credentials   — AWS Credentials (ECR, STS)
-//   docker-registry     — Username + password (docker login before build; use Docker Hub token or your registry user)
-//   kubeconfig          — Secret file (kubectl context for the cluster)
-
 pipeline {
     agent any
 
     environment {
-        AWS_REGION    = 'us-east-1'
+        AWS_REGION    = 'ap-northeast-1'
+        EKS_CLUSTER   = 'med-erp-dev-eks'
         K8S_NAMESPACE = 'med-erp'
+        AWS_ACCOUNT   = '254201323767'
+        ECR_REGISTRY  = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         IMAGE_TAG     = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(8) : "b${env.BUILD_NUMBER}"}"
     }
 
     options {
         timeout(time: 45, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
     }
 
     stages {
+
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
-        stage('Build & test') {
+        stage('AWS & Kubernetes Check') {
             steps {
                 sh '''
                     set -e
+
+                    echo "=== AWS Identity ==="
+                    aws sts get-caller-identity
+
+                    echo "=== EKS Cluster ==="
+                    aws eks describe-cluster \
+                      --name "$EKS_CLUSTER" \
+                      --region "$AWS_REGION" \
+                      --query 'cluster.status' \
+                      --output text
+
+                    echo "=== Kubernetes Nodes ==="
+                    kubectl get nodes
+
+                    echo "=== Kubernetes Namespace ==="
+                    kubectl get namespace "$K8S_NAMESPACE"
+                '''
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh '''
+                    set -e
+
                     for svc in user-service product-service order-service; do
-                      echo "=== $svc ==="
-                      (cd "$svc" && mvn -B clean verify)
+                        echo "========================================"
+                        echo "Building $svc"
+                        echo "========================================"
+
+                        cd "$WORKSPACE/$svc"
+                        mvn -B clean verify
                     done
                 '''
             }
+
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true,
+                          testResults: '**/target/surefire-reports/*.xml'
                 }
             }
         }
 
-        stage('Docker push & deploy') {
-            when { branch 'main' }
+        stage('ECR Login') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials',
-                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-                    usernamePassword(credentialsId: 'docker-registry',
-                                     usernameVariable: 'DOCKER_USER',
-                                     passwordVariable: 'DOCKER_PASS'),
-                    file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')
-                ]) {
-                    sh '''
-                        set -e
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                sh '''
+                    set -e
 
-                        ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-                        ECR_REGISTRY="${ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                        aws ecr get-login-password --region "$AWS_REGION" | \
-                          docker login --username AWS --password-stdin "$ECR_REGISTRY"
+                    echo "Logging into ECR..."
 
-                        for svc in user-service product-service order-service; do
-                          docker build -t "$ECR_REGISTRY/med-erp/$svc:$IMAGE_TAG" \
-                            -t "$ECR_REGISTRY/med-erp/$svc:latest" "$svc/"
-                          docker push "$ECR_REGISTRY/med-erp/$svc:$IMAGE_TAG"
-                          docker push "$ECR_REGISTRY/med-erp/$svc:latest"
-                        done
+                    aws ecr get-login-password \
+                      --region "$AWS_REGION" | \
+                    docker login \
+                      --username AWS \
+                      --password-stdin "$ECR_REGISTRY"
+                '''
+            }
+        }
 
-                        for svc in user-service product-service order-service; do
-                          kubectl set image "deployment/$svc" "$svc=$ECR_REGISTRY/med-erp/$svc:$IMAGE_TAG" -n "$K8S_NAMESPACE"
-                          kubectl rollout status "deployment/$svc" -n "$K8S_NAMESPACE" --timeout=5m
-                        done
-                    '''
-                }
+        stage('Build & Push Docker Images') {
+            steps {
+                sh '''
+                    set -e
+
+                    for svc in user-service product-service order-service; do
+
+                        case "$svc" in
+                            user-service)
+                                REPO="medical-erp-user"
+                                ;;
+                            product-service)
+                                REPO="medical-erp-product"
+                                ;;
+                            order-service)
+                                REPO="medical-erp-order"
+                                ;;
+                        esac
+
+                        IMAGE="$ECR_REGISTRY/$REPO:$IMAGE_TAG"
+
+                        echo "========================================"
+                        echo "Building $svc"
+                        echo "Repository: $REPO"
+                        echo "Tag: $IMAGE_TAG"
+                        echo "========================================"
+
+                        docker build \
+                          -t "$IMAGE" \
+                          "$WORKSPACE/$svc"
+
+                        docker push "$IMAGE"
+
+                    done
+                '''
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "Using EKS cluster:"
+                    kubectl config current-context
+
+                    for svc in user-service product-service order-service; do
+
+                        case "$svc" in
+                            user-service)
+                                REPO="medical-erp-user"
+                                ;;
+                            product-service)
+                                REPO="medical-erp-product"
+                                ;;
+                            order-service)
+                                REPO="medical-erp-order"
+                                ;;
+                        esac
+
+                        IMAGE="$ECR_REGISTRY/$REPO:$IMAGE_TAG"
+
+                        echo "Deploying $svc"
+                        echo "Image: $IMAGE"
+
+                        kubectl set image \
+                          "deployment/$svc" \
+                          "$svc=$IMAGE" \
+                          -n "$K8S_NAMESPACE"
+
+                        kubectl rollout status \
+                          "deployment/$svc" \
+                          -n "$K8S_NAMESPACE" \
+                          --timeout=5m
+
+                    done
+                '''
+            }
+        }
+
+        stage('Deployment Verification') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "=== Deployments ==="
+
+                    kubectl get deployments \
+                      -n "$K8S_NAMESPACE" \
+                      -o wide
+
+                    echo "=== Pods ==="
+
+                    kubectl get pods \
+                      -n "$K8S_NAMESPACE" \
+                      -o wide
+                '''
             }
         }
     }
 
     post {
-        always { cleanWs() }
+        success {
+            echo "MedERP backend CI/CD completed successfully."
+        }
+
+        failure {
+            echo "MedERP backend CI/CD failed. Check the stage logs."
+        }
+
+        always {
+            cleanWs()
+        }
     }
 }

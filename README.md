@@ -333,3 +333,41 @@ Application health checks
 The AWS environment was created as a temporary development/demo deployment and was removed after verification to avoid unnecessary cloud costs.
 
 Note: No AWS credentials, MongoDB connection strings, JWT secrets, or other sensitive configuration should be committed to this repository.
+
+## Deployment Evidence
+
+The AWS deployment was successfully validated using Jenkins, Amazon EKS, Kubernetes, and CloudFront.
+
+### GitHub Repository
+
+![GitHub Repository](docs/screenshots/01-GitHub-Repository.png)
+
+### Jenkins Backend Pipeline
+
+![Jenkins Backend Success](docs/screenshots/02-Jenkins-Backend-Success.png)
+
+Backend Jenkins console log:
+
+[`Jenkins-Backend-Console-Log.txt`](docs/screenshots/Jenkins-Backend-Console-Log.txt)
+
+### Jenkins Frontend Pipeline
+
+![Jenkins Frontend Success](docs/screenshots/03-Jenkins-Frontend-Success.png)
+
+Frontend Jenkins console log:
+
+[`Jenkins-Frontend-Console-Log.txt`](docs/screenshots/Jenkins-Frontend-Console-Log.txt)
+
+### Kubernetes Deployment
+
+![EKS Kubernetes Deployment](docs/screenshots/04-EKS-Kubernetes.png)
+
+### EKS Cluster
+
+![EKS Cluster](docs/screenshots/06-EKS-Cluster.png)
+
+### CloudFront API Verification
+
+![CloudFront API Verification](docs/screenshots/05-CloudFront-API-Verification.png)
+
+These screenshots and console logs provide evidence of the CI/CD pipelines, Kubernetes deployment, EKS infrastructure, and application/API verification performed during the AWS deployment.

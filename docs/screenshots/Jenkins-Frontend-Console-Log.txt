@@ -1,0 +1,230 @@
+Started by user admin
+Obtained jenkins/Jenkinsfile.frontend from git https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/MedERP-Frontend-CI-CD
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git
+ > git init /var/lib/jenkins/workspace/MedERP-Frontend-CI-CD # timeout=10
+Fetching upstream changes from https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.53.0'
+ > git fetch --tags --force --progress -- https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ > git rev-parse refs/remotes/origin/project-b22^{commit} # timeout=10
+Checking out Revision 7418854214795729fac3e94838f2302387a07cc0 (refs/remotes/origin/project-b22)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 7418854214795729fac3e94838f2302387a07cc0 # timeout=10
+Commit message: "Add frontend package lockfile"
+ > git rev-list --no-walk e0fddfc96ca05110a1da68bbd90229ce977e9746 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 20 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/MedERP-Frontend-CI-CD/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git # timeout=10
+Fetching upstream changes from https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.53.0'
+ > git fetch --tags --force --progress -- https://github.com/omkar-pinjarkar/edublitz-b2b-medical-erp.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/project-b22^{commit} # timeout=10
+Checking out Revision 7418854214795729fac3e94838f2302387a07cc0 (refs/remotes/origin/project-b22)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 7418854214795729fac3e94838f2302387a07cc0 # timeout=10
+Commit message: "Add frontend package lockfile"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (AWS Check)
+[Pipeline] sh
++ set -e
++ echo === AWS Identity ===
+=== AWS Identity ===
++ aws sts get-caller-identity
+{
+    "UserId": "AROATWL4UMD3SJCIV74XU:i-0fca370b0756a6e53",
+    "Account": "254201323767",
+    "Arn": "arn:aws:sts::254201323767:assumed-role/MedicalERP-CommandCenter-Role/i-0fca370b0756a6e53"
+}
++ echo === S3 Bucket ===
+=== S3 Bucket ===
++ aws s3api head-bucket --bucket edublitz-medical-erp-frontend-2026-omkar
+{
+    "BucketArn": "arn:aws:s3:::edublitz-medical-erp-frontend-2026-omkar",
+    "BucketRegion": "ap-northeast-1",
+    "AccessPointAlias": false
+}
++ echo === CloudFront Distribution ===
+=== CloudFront Distribution ===
++ aws cloudfront get-distribution --id E2QDW2OZZYNT2S --query Distribution.Status --output text
+Deployed
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Frontend)
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/MedERP-Frontend-CI-CD/frontend
+[Pipeline] {
+[Pipeline] sh
++ set -e
++ echo === Installing dependencies ===
+=== Installing dependencies ===
++ npm ci
+npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm WARN deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm WARN deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm WARN deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+npm WARN deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
+
+added 323 packages, and audited 324 packages in 6s
+
+69 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (3 moderate, 1 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
++ echo === Running lint ===
+=== Running lint ===
++ npm run lint
+
+> edublitz-medical-erp-frontend@1.0.0 lint
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+
++ echo === Building frontend ===
+=== Building frontend ===
++ npm run build
+
+> edublitz-medical-erp-frontend@1.0.0 build
+> tsc && vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 1968 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  1.00 kB[22m[1m[22m[2m │ gzip:  0.51 kB[22m
+[2mdist/[22m[2massets/[22m[35mindex-CnM7nThE.css  [39m[1m[2m 29.80 kB[22m[1m[22m[2m │ gzip:  5.43 kB[22m
+[2mdist/[22m[2massets/[22m[36mcharts-D1bUOxjZ.js  [39m[1m[2m  0.40 kB[22m[1m[22m[2m │ gzip:  0.26 kB[22m
+[2mdist/[22m[2massets/[22m[36mforms-PnX60MUP.js   [39m[1m[2m 83.58 kB[22m[1m[22m[2m │ gzip: 23.02 kB[22m
+[2mdist/[22m[2massets/[22m[36mvendor-B3yhukAF.js  [39m[1m[2m164.83 kB[22m[1m[22m[2m │ gzip: 53.75 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-7ygsseQQ.js   [39m[1m[2m238.26 kB[22m[1m[22m[2m │ gzip: 66.76 kB[22m
+[32m✓ built in 4.88s[39m
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to S3)
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/MedERP-Frontend-CI-CD/frontend
+[Pipeline] {
+[Pipeline] sh
++ set -e
++ echo === Uploading frontend to S3 ===
+=== Uploading frontend to S3 ===
++ aws s3 sync dist/ s3://edublitz-medical-erp-frontend-2026-omkar/ --region ap-northeast-1 --delete --cache-control public,max-age=31536000,immutable --exclude *.html
+delete: s3://edublitz-medical-erp-frontend-2026-omkar/assets/index-BMf1jswa.js
+Completed 0 Bytes/738.1 KiB (0 Bytes/s) with 6 file(s) remainingCompleted 29.1 KiB/738.1 KiB (239.1 KiB/s) with 6 file(s) remainingupload: dist/assets/index-CnM7nThE.css to s3://edublitz-medical-erp-frontend-2026-omkar/assets/index-CnM7nThE.css
+Completed 29.1 KiB/738.1 KiB (239.1 KiB/s) with 5 file(s) remainingCompleted 110.7 KiB/738.1 KiB (905.3 KiB/s) with 5 file(s) remainingupload: dist/assets/forms-PnX60MUP.js to s3://edublitz-medical-erp-frontend-2026-omkar/assets/forms-PnX60MUP.js
+Completed 110.7 KiB/738.1 KiB (905.3 KiB/s) with 4 file(s) remainingCompleted 343.5 KiB/738.1 KiB (2.7 MiB/s) with 4 file(s) remaining  upload: dist/assets/index-7ygsseQQ.js to s3://edublitz-medical-erp-frontend-2026-omkar/assets/index-7ygsseQQ.js
+Completed 343.5 KiB/738.1 KiB (2.7 MiB/s) with 3 file(s) remainingCompleted 343.8 KiB/738.1 KiB (2.7 MiB/s) with 3 file(s) remainingupload: dist/.htaccess to s3://edublitz-medical-erp-frontend-2026-omkar/.htaccess
+Completed 343.8 KiB/738.1 KiB (2.7 MiB/s) with 2 file(s) remainingCompleted 504.8 KiB/738.1 KiB (3.5 MiB/s) with 2 file(s) remainingupload: dist/assets/vendor-B3yhukAF.js to s3://edublitz-medical-erp-frontend-2026-omkar/assets/vendor-B3yhukAF.js
+Completed 504.8 KiB/738.1 KiB (3.5 MiB/s) with 1 file(s) remainingCompleted 505.2 KiB/738.1 KiB (3.4 MiB/s) with 1 file(s) remainingupload: dist/assets/charts-D1bUOxjZ.js to s3://edublitz-medical-erp-frontend-2026-omkar/assets/charts-D1bUOxjZ.js
++ aws s3 cp dist/index.html s3://edublitz-medical-erp-frontend-2026-omkar/index.html --region ap-northeast-1 --cache-control no-cache,no-store,must-revalidate --content-type text/html
+Completed 1008 Bytes/1008 Bytes (16.3 KiB/s) with 1 file(s) remainingupload: dist/index.html to s3://edublitz-medical-erp-frontend-2026-omkar/index.html
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (CloudFront Invalidation)
+[Pipeline] sh
++ set -e
++ echo === Creating CloudFront invalidation ===
+=== Creating CloudFront invalidation ===
++ aws cloudfront create-invalidation --distribution-id E2QDW2OZZYNT2S --paths /*
+{
+    "Location": "https://cloudfront.amazonaws.com/2020-05-31/distribution/E2QDW2OZZYNT2S/invalidation/I5DWM5NLI81TS9KLXMIVRNKPSG",
+    "Invalidation": {
+        "Id": "I5DWM5NLI81TS9KLXMIVRNKPSG",
+        "Status": "InProgress",
+        "CreateTime": "2026-08-19T07:32:12.789000+00:00",
+        "InvalidationBatch": {
+            "Paths": {
+                "Quantity": 1,
+                "Items": [
+                    "/*"
+                ]
+            },
+            "CallerReference": "cli-1787124732-764644"
+        }
+    }
+}
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deployment Verification)
+[Pipeline] sh
++ set -e
++ echo === S3 objects ===
+=== S3 objects ===
++ aws s3 ls s3://edublitz-medical-erp-frontend-2026-omkar/ --region ap-northeast-1
++ head -20
+                           PRE assets/
+2026-08-19 07:32:11        294 .htaccess
+2026-08-19 07:32:12       1008 index.html
++ echo === CloudFront status ===
+=== CloudFront status ===
++ aws cloudfront get-distribution --id E2QDW2OZZYNT2S --query Distribution.Status --output text
+Deployed
++ echo Frontend deployment completed.
+Frontend deployment completed.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] cleanWs
+[WS-CLEANUP] Deleting project workspace...
+[WS-CLEANUP] Deferred wipeout is used...
+[WS-CLEANUP] done
+[Pipeline] echo
+MedERP frontend CI/CD completed successfully.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

@@ -134,6 +134,32 @@ cd user-service && mvn clean package -DskipTests
 
 `*/target/` and `frontend/dist/` are gitignored. Clean with `mvn clean` and delete `frontend/dist` if needed.
 
+## DevOps Implementation
+
+This project was deployed on AWS using a containerized microservices architecture.
+
+### Infrastructure
+
+- AWS VPC with public/private subnets and NAT gateways
+- Amazon EKS for Kubernetes workloads
+- Terraform for infrastructure as code
+- AWS Load Balancer Controller with ALB Ingress
+- IAM/OIDC integration for Kubernetes workloads
+- Amazon ECR for Docker images
+
+### CI/CD
+
+Two Jenkins pipelines automate deployment:
+
+**Backend**
+
+```text
+GitHub → Jenkins → Maven Test → Docker Build → ECR → EKS → Rollout Verification
+
+**Frontend**
+```text
+GitHub → Jenkins → npm ci → Lint → Vite Build → S3 → CloudFront Invalidation
+
 ## License
 
 Proprietary — **Edublitz — Powered by Greamio Technologies Pvt Ltd.**  

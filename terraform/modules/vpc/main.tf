@@ -25,21 +25,21 @@ resource "aws_vpc" "main" {
 # ── Internet Gateway ──────────────────────────────────────────────────────────
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-  tags = merge(var.tags, { Name = "${var.name}-igw" })
+  tags   = merge(var.tags, { Name = "${var.name}-igw" })
 }
 
 # ── Public Subnets ─────────────────────────────────────────────────────────────
 resource "aws_subnet" "public" {
-  count             = length(local.azs)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index)
-  availability_zone = local.azs[count.index]
+  count                   = length(local.azs)
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = cidrsubnet(var.vpc_cidr, 4, count.index)
+  availability_zone       = local.azs[count.index]
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name                                          = "${var.name}-public-${local.azs[count.index]}"
-    "kubernetes.io/role/elb"                      = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"   = "shared"
+    Name                                        = "${var.name}-public-${local.azs[count.index]}"
+    "kubernetes.io/role/elb"                    = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   })
 }
 
@@ -51,9 +51,9 @@ resource "aws_subnet" "private" {
   availability_zone = local.azs[count.index]
 
   tags = merge(var.tags, {
-    Name                                          = "${var.name}-private-${local.azs[count.index]}"
-    "kubernetes.io/role/internal-elb"             = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"   = "shared"
+    Name                                        = "${var.name}-private-${local.azs[count.index]}"
+    "kubernetes.io/role/internal-elb"           = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   })
 }
 
